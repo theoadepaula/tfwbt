@@ -1,3 +1,9 @@
+#' Title
+#'
+#' @param url_se string
+#'
+#' @return tibble
+#' @export
 get_data_se <- function(url_se) {
 
   texto_reservatorio_se <- pdftools::pdf_text(url_se)

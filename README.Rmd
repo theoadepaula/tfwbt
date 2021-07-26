@@ -13,49 +13,139 @@ knitr::opts_chunk$set(
 )
 ```
 
-# tfwbt
+# Trabalho Final de Web Scraping do Théo (tfwbt)
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/theoadepaula/tfwbt/workflows/R-CMD-check/badge.svg)](https://github.com/theoadepaula/tfwbt/actions)
 <!-- badges: end -->
 
-The goal of tfwbt is to ...
+O objetivo do pacote tfwbt é para utilizar os conhecimentos aprendidos no curso de web scraping do [Curso R](https://curso-r.com/) e aplicar na obtenção dos dados dos reservatórios hídricos fornecidos pelas secretarias estaduais de meio ambiente ou relacionados ao meio ambiente. 
 
-## Installation
+A motivação dessa aplicação é para pegar os dados de forma rápida para alimentação do sistema utilizado no meu trabalho, que verifica o nível dos reservatórios das bacias hidrográficas e/ou dos estados. Para o recorte do trabalho, serão obtidos dados dos alguns dos estados do Nordeste, que não estão sob os cuidados do [DNOCS](https://www.gov.br/dnocs/pt-br) ou da [ANA](https://www.gov.br/ana/pt-br), além de um reservatório que fica em Minas Gerais, que faz parte da Bacia do São Francisco.
 
-You can install the released version of tfwbt from [CRAN](https://CRAN.R-project.org) with:
+## Instalação do pacote
 
-``` r
-install.packages("tfwbt")
-```
-
-And the development version from [GitHub](https://github.com/) with:
+O pacote pode ser instalado pelo [GitHub](https://github.com/) pelos comandos abaixo:
 
 ``` r
 # install.packages("devtools")
 devtools::install_github("theoadepaula/tfwbt")
 ```
-## Example
+## Funções do pacote 
 
-This is a basic example which shows you how to solve a common problem:
+Para um maior detalhamento, são esses os estados que terão os dados captados:
 
-```{r example}
+- Bahia
+- Ceará
+- Minas Gerais
+- Paraíba
+- Pernambuco
+- Rio Grande do Norte
+- Sergipe
+
+
+### Bahia
+
+A função para pegar os dados do estado do Bahia é o get_data_ba(), que necessita de link que fica no site do [INEMA](http://www.inema.ba.gov.br), na parte de [informativo semanal de monitoramento de barragens](http://www.inema.ba.gov.br/gestao-2/barragensreservatorios/informativo-semanal-de-monitoramento-das-barragens/).
+
+A tabela gerada pela função é extraída do link informado, que é um PDF. O passo a passo pode ser visto dentro do link da função get_data_ba().
+
+```{r bahia}
+library(tfwbt)
+library(DT)
+## basic example code
+
+get_data_ba('http://www.inema.ba.gov.br/wp-content/uploads/2021/07/INFORMATIVO-SEMANAL-N%C2%BA-29-2021.pdf') %>% 
+  DT::datatable()
+
+```
+
+### Ceará
+
+A função para pegar os dados do estado do Ceará é o get_data_ce(), que utiliza o link que fica no site da [FUNCEME](http://www.funceme.br/), na parte do [Portal Hidrológico](http://www.hidro.ce.gov.br/).
+
+A tabela gerada pela função é extraída do XML fornecido pela página. Ela possui uma API escondida, que requer como query um epoch, marcador de tempo em números inteiros. O passo a passo pode ser visto dentro do link da função get_data_ce().
+
+```{r ceara}
 library(tfwbt)
 ## basic example code
+
+get_data_ce()%>% 
+  DT::datatable()
+
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+### Minas Gerais
 
-```{r cars}
-summary(cars)
+A função para pegar os dados da barragem Bico de Pedra, que fica no estado de Minas Gerais, é o get_data_mg(), que precisa do link que fica no site do [Distrito de Irrigação do Perímetro Gorutuba](http://www.dig.org.br/home).
+
+A tabela gerada pela função é extraída pela tabela html fornecida pela página. O passo a passo pode ser visto dentro do link da função get_data_mg().
+
+```{r minas_gerais}
+library(tfwbt)
+## basic example code
+
+get_data_mg('http://www.dig.org.br/noticia/Junho-2020-distrito-do-gorutuba/251/')%>% 
+  DT::datatable()
+
 ```
 
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this. You could also use GitHub Actions to re-render `README.Rmd` every time you push. An example workflow can be found here: <https://github.com/r-lib/actions/tree/master/examples>.
+### Paraíba
 
-You can also embed plots, for example:
+A função para pegar os dados do estado do Paraíba é o get_data_pb(), que utiliza internamente o link que fica no site da [AESA](http://www.aesa.pb.gov.br/).
 
-```{r pressure, echo = FALSE}
-plot(pressure)
+A tabela gerada pela função é extraída do JSON fornecido pela página. Ela possui uma API escondida, que requer como query um epoch, marcador de tempo em números inteiros, como o estado do Ceará. O passo a passo pode ser visto dentro do link da função get_data_pb().
+
+```{r paraiba}
+library(tfwbt)
+## basic example code
+
+get_data_pb()%>% 
+  DT::datatable()
+
 ```
 
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
+### Pernambuco
+
+A função para pegar os dados do estado de Pernambuco é o get_data_pe(), que usa o link que fica no site da [APAC](https://www.apac.pe.gov.br/), na parte de [monitoramento de boletins de reservatórios hidrológicos](https://www.apac.pe.gov.br/rios-e-reservatorios).
+
+A tabela gerada pela função é extraída do PDF, que vem do link fornecido. O passo a passo pode ser visto dentro do link da função get_data_pe().
+
+```{r pernambuco}
+library(tfwbt)
+## basic example code
+
+get_data_pe('https://www.apac.pe.gov.br/uploads/Boletim-Monitoramento-Reservatorios26-07-2021.pdf')%>% 
+  DT::datatable()
+
+```
+
+### Rio Grande do Norte
+
+A função para pegar os dados do estado de Rio Grande do Norte é o get_data_rn(), que usa o link que fica no site da [SEARN](http://www.searh.rn.gov.br/), na parte de [Situação Volumétrica de Reservatórios do RN](http://sistemas.searh.rn.gov.br/MonitoramentoVolumetrico/).
+
+A tabela gerada pela função é extraída pela tabela html fornecida pela página, como no caso da barragem Bico da Pedra - MG. O passo a passo pode ser visto dentro do link da função get_data_rn().
+
+```{r rio_grande_do_norte}
+library(tfwbt)
+## basic example code
+
+get_data_rn()%>% 
+  DT::datatable()
+
+```
+
+### Sergipe
+
+A função para pegar os dados do estado de Rio Grande do Norte é o get_data_se(), que usa o link que fica no site da [SEDURBS](https://sedurbs.se.gov.br/), na parte do [Portal de Recursos Hídricos](https://sedurbs.se.gov.br/portalrecursoshidricos/).
+
+A tabela gerada pela função é extraída do PDF, que vem do link fornecido, como os estados da Bahia e Pernambuco. O passo a passo pode ser visto dentro do link da função get_data_se().
+
+```{r sergipe}
+library(tfwbt)
+## basic example code
+
+get_data_se('https://sedurbs.se.gov.br/portalrecursoshidricos/gerenciamento/boletins_reservatorio/Boletim%2027-%2005_07_2021.pdf')%>% 
+  DT::datatable()
+
+```

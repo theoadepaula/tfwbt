@@ -1,3 +1,8 @@
+#' Title
+#'
+#' @return tibble
+#' @export
+#'
 get_data_ce <- function() {
 
   url_ce <- 'http://www.funceme.br/produtos/script/acudes_e_rios/Boletim_diario_nivel_acudes/anos/atual/index.xml?'

@@ -1,3 +1,9 @@
+#' Title
+#'
+#' @param texto_reservatorio_se string
+#' @param ano_arquivo string
+#'
+#' @return tibble
 pdf_to_se <- function(texto_reservatorio_se,ano_arquivo) {
 
   texto_bruto <- texto_reservatorio_se %>%

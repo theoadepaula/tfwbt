@@ -2,8 +2,10 @@
 
 export("%>%")
 export(get_data_ba)
+export(get_data_ce)
 export(get_data_mg)
 export(get_data_pb)
 export(get_data_pe)
 export(get_data_rn)
+export(get_data_se)
 importFrom(magrittr,"%>%")
