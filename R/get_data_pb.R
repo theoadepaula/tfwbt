@@ -1,16 +1,18 @@
 #' Get Data Pb
 #'
+#' @param epoch integer
+#'
 #' @return tibble
 #' @export
 #'
 #' @examples \dontrun{get_data_pb()}
 #'
-get_data_pb <- function() {
+get_data_pb <- function(epoch=as.POSIXct(Sys.time()) %>% as.integer()) {
 
   url_base_pb <- 'http://www.aesa.pb.gov.br/aesa-website/resources/data/volumeAcudes/ultimosVolumes/data.json?'
 
   get_pb <- httr::GET(url_base_pb,
-                  query=list('_'=as.POSIXct(Sys.time()) %>% as.integer()))
+                  query=list('_'=epoch))
 
   tab_pb <-
     suppressMessages(get_pb %>%

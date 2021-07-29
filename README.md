@@ -194,3 +194,266 @@ get_data_se('https://sedurbs.se.gov.br/portalrecursoshidricos/gerenciamento/bole
 ```
 
 <img src="man/figures/README-sergipe-1.png" width="100%" />
+
+## Aplicação dos dados
+
+Foram geradas tabelas de dados e gravadas no nome do reservatorios + UF,
+levando o histórico possível registrado nos sites até agora. A partir
+dessas tabelas, podemos verificar os níveis de reservatórios por estado
+e ver qual é a situação que se encontram.
+
+As informações coletadas infelizmente não se mostram consistentes e nem
+periódicas, pois em alguns estados são apresentados dados de 2019 em
+diante, e no caso do Rio Grande do Norte, só mostra o dado do momento
+atual, não sendo possível resgatar o histórico. No caso do Ceará, foi
+possível resgatar o histórico de 2007 a 2010, e depois 2021.
+
+Para isso, foi preciso puxar as informações de data, nome do
+reservatório, percentual do volume útil do reservatório e acrescentar a
+UF que se encontra. Em alguns bancos de dados foram ajustados erros que
+poderiam comprometer a análise.
+
+Levando isso em conta, e sem poder extrapolar para fazer uma afirmação
+mais contundente, vamos olhar os níveis de reservatórios.
+
+``` r
+library(dplyr)
+#> 
+#> Attaching package: 'dplyr'
+#> The following objects are masked from 'package:stats':
+#> 
+#>     filter, lag
+#> The following objects are masked from 'package:base':
+#> 
+#>     intersect, setdiff, setequal, union
+library(ggplot2)
+library(forcats)
+library(lubridate)
+#> 
+#> Attaching package: 'lubridate'
+#> The following objects are masked from 'package:base':
+#> 
+#>     date, intersect, setdiff, union
+library(tidyr)
+
+volume_ba <- reservatorios_ba %>% 
+  select(data,reservatorio,volume_util_percent) %>% 
+  mutate(uf='BA',
+         volume_util_percent=if_else(volume_util_percent==771.90,71.90,volume_util_percent))
+
+volume_ce <- reservatorios_ce %>% 
+  select(data,reservatorio=acude,volume_util_percent=volume_pc) %>% 
+  mutate(uf='CE')
+
+volume_pb <- reservatorios_pb %>% 
+  select(data,reservatorio=acude,volume_util_percent=volume_total_percent) %>% 
+  mutate(volume_util_percent=round(as.numeric(volume_util_percent),2),
+         data=ymd(data),
+         uf='PB')
+
+volume_pe <- reservatorios_pe %>% 
+  select(data,reservatorio,volume_util_percent=percent_volume) %>% 
+  mutate(uf='PE')
+
+volume_rn <- reservatorios_rn %>% 
+  select(data=data_da_medicao,reservatorio,volume_util_percent=volume_atual_percent) %>% mutate(uf='RN')
+
+volume_se <- reservatorios_se %>% 
+  select(data,reservatorio,volume_util_percent) %>%
+  drop_na(data) %>% 
+  mutate(uf='SE')
+
+volume_ne <- bind_rows(volume_ba,volume_ce,volume_pb,volume_pe,volume_rn,volume_se)
+```
+
+## Média Histórica
+
+Para uma análise mais geral, foi feito um agrupamento dos dados por UF e
+uma média das informações de todas as datas disponíveis. Essa média não
+leva em conta o volume de cada reservatório, pois nem todos os estados
+fornecem o volume total para ser calculado o peso adequado para fazer a
+média ponderada.
+
+Vemos que a média dos estados do Rio Grande do Norte e Paraíba rondam
+perto de 42% e do estado de Sergipe de 83%. Os outros estados se
+aproximam de média geral, próximos de 56%.
+
+``` r
+media_reservatorios_uf <- volume_ne %>% 
+  group_by(uf) %>% 
+  summarise(media_reservatorios=mean(volume_util_percent,na.rm=T) %>% 
+              round(2)) 
+
+media_reservatorios_uf <- media_reservatorios_uf %>% 
+  bind_rows(tibble(uf='Total',media_reservatorios=mean(media_reservatorios_uf$media_reservatorios)))
+
+media_reservatorios_uf %>% 
+knitr::kable(digits = 2)
+```
+
+| uf    | media\_reservatorios |
+|:------|---------------------:|
+| BA    |                56.26 |
+| CE    |                56.11 |
+| PB    |                41.34 |
+| PE    |                54.47 |
+| RN    |                42.78 |
+| SE    |                83.22 |
+| Total |                55.70 |
+
+``` r
+  
+media_reservatorios_uf %>% 
+  filter(uf!='Total') %>% 
+  ggplot(aes(x=fct_reorder(uf,media_reservatorios),y=media_reservatorios/100,
+             fill=uf)
+         )+
+  geom_col(show.legend = FALSE) +
+  scale_y_continuous(labels = scales::percent)+
+  theme_minimal() +
+  labs(title='Média histórica dos reservatórios por UF',
+       y='Porcentagem (%)',
+       x='UF' )
+```
+
+<img src="man/figures/README-media_historica-1.png" width="100%" />
+
+## Média por ano
+
+Fazendo agora uma análise por ano, foram agrupados os dados por ano e
+logo após a média da percentagem do volume útil. Lembrando que somente o
+estado da Paraíba forneceu dados de um longo período de tempo, fazendo
+que o gráfico mostrasse uma distorção de informação e mostrando dados
+mais confiáveis entre 2019 e 2021.
+
+Nos seis últimos anos podemos ver uma tendência de recuperação que foi
+interrompido pelo ano de 2021. Mesmo que as informações não sejam tão
+consistentes, devemos observar de perto como os reservatórios estarão.
+
+``` r
+library(knitr)
+
+media_ano <- volume_ne %>% 
+  group_by(ano=year(data) %>% as.character) %>% 
+    summarise(media_reservatorios=mean(volume_util_percent,na.rm=T) %>% 
+              round(2))
+
+media_ano <- media_ano %>% 
+  bind_rows(tibble(ano='Total',
+                   media_reservatorios=mean(media_ano$media_reservatorios)))
+
+media_ano %>% 
+knitr::kable(digits = 2)
+```
+
+| ano   | media\_reservatorios |
+|:------|---------------------:|
+| 1967  |                95.57 |
+| 1968  |                95.10 |
+| 1972  |                95.87 |
+| 1973  |                96.03 |
+| 1974  |                96.23 |
+| 1975  |                97.70 |
+| 1976  |                95.83 |
+| 1978  |                96.35 |
+| 1979  |                86.13 |
+| 1980  |                70.17 |
+| 1981  |                93.50 |
+| 1982  |                77.63 |
+| 1983  |                66.23 |
+| 1984  |                95.27 |
+| 1985  |                95.37 |
+| 1986  |                95.63 |
+| 1987  |                90.50 |
+| 1988  |                92.90 |
+| 1989  |                96.20 |
+| 1990  |                84.97 |
+| 1991  |                83.37 |
+| 1992  |                85.07 |
+| 1993  |                59.13 |
+| 1994  |                39.35 |
+| 1995  |                50.25 |
+| 1996  |                54.20 |
+| 1997  |                44.68 |
+| 1998  |                28.18 |
+| 1999  |                29.92 |
+| 2000  |                51.31 |
+| 2001  |                33.99 |
+| 2002  |                39.31 |
+| 2003  |                30.02 |
+| 2004  |                65.88 |
+| 2005  |                54.94 |
+| 2006  |                54.39 |
+| 2007  |                41.71 |
+| 2008  |                65.13 |
+| 2009  |                76.12 |
+| 2010  |                55.91 |
+| 2011  |                67.99 |
+| 2012  |                39.44 |
+| 2013  |                28.06 |
+| 2014  |                23.11 |
+| 2015  |                18.49 |
+| 2016  |                17.31 |
+| 2017  |                42.77 |
+| 2018  |                48.54 |
+| 2019  |                61.12 |
+| 2020  |                66.12 |
+| 2021  |                53.28 |
+| 5020  |                40.70 |
+| NA    |                  NaN |
+| Total |                  NaN |
+
+``` r
+media_ano %>% 
+  filter(ano!='Total') %>% 
+ggplot(aes(x=as.integer(ano),y=media_reservatorios/100,group=1))+
+  geom_line()+
+  expand_limits(y=c(0,1))+
+  scale_x_continuous(breaks = seq(1965,2021,5))+
+  scale_y_continuous(breaks = seq(0,1,.1), labels = scales::percent)+
+  theme_minimal()+
+  theme(panel.grid.minor = element_blank())+
+    labs(title='Média dos reservatórios do Nordeste por ano',
+       y='Porcentagem (%)',
+       x='Ano' )
+```
+
+<img src="man/figures/README-media_por_ano-1.png" width="100%" />
+
+``` r
+
+media_ano %>% 
+  filter(ano!='Total',
+         as.integer(ano)>2015) %>% 
+ggplot(aes(x=as.integer(ano),y=media_reservatorios/100,fill='red'))+
+  geom_col(show.legend = FALSE)+
+  expand_limits(y=c(0,1))+
+  scale_y_continuous(breaks = seq(0,1,.1), labels = scales::percent)+
+  scale_x_continuous(breaks = seq(2016,2021,1))+
+  theme_minimal()+
+  theme(panel.grid.minor = element_blank())+
+    labs(title='Média dos reservatórios do Nordeste por ano',
+         subtitle = '2016 a 2021',
+       y='Porcentagem (%)',
+       x='Ano' )
+```
+
+<img src="man/figures/README-media_por_ano-2.png" width="100%" />
+
+## Média por UF e ano
+
+``` r
+media_uf_ano <- volume_ne %>% 
+  group_by(uf,ano=year(data)) %>% 
+    summarise(media_reservatorios=mean(volume_util_percent,na.rm=T) %>% 
+              round(2))
+#> `summarise()` has grouped output by 'uf'. You can override using the `.groups` argument.
+
+ggplot(media_uf_ano, aes(factor(ano),media_reservatorios,fill=uf))+
+  geom_col(show.legend = FALSE)+
+  facet_wrap(~uf,nrow = 3,scales = 'free_x')+
+  theme_minimal()+
+  theme(panel.grid.minor = element_blank())
+```
+
+<img src="man/figures/README-media_por_uf_ano-1.png" width="100%" />

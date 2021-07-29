@@ -4,7 +4,10 @@
 \alias{get_data_pb}
 \title{Get Data Pb}
 \usage{
-get_data_pb()
+get_data_pb(epoch = as.POSIXct(Sys.time()) \%>\% as.integer())
+}
+\arguments{
+\item{epoch}{integer}
 }
 \value{
 tibble
