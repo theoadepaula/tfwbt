@@ -239,7 +239,11 @@ library(tidyr)
 volume_ba <- reservatorios_ba %>% 
   select(data,reservatorio,volume_util_percent) %>% 
   mutate(uf='BA',
-         volume_util_percent=if_else(volume_util_percent==771.90,71.90,volume_util_percent))
+         volume_util_percent=if_else(volume_util_percent==771.90,71.90,
+                                     volume_util_percent),
+         volume_util_percent=if_else(volume_util_percent==743.55,74.35,
+                                     volume_util_percent)
+         )
 
 volume_ce <- reservatorios_ce %>% 
   select(data,reservatorio=acude,volume_util_percent=volume_pc) %>% 
@@ -261,7 +265,8 @@ volume_rn <- reservatorios_rn %>%
 volume_se <- reservatorios_se %>% 
   select(data,reservatorio,volume_util_percent) %>%
   drop_na(data) %>% 
-  mutate(uf='SE')
+  mutate(uf='SE',
+         volume_util_percent=if_else(volume_util_percent==1000,100,volume_util_percent))
 
 volume_ne <- bind_rows(volume_ba,volume_ce,volume_pb,volume_pe,volume_rn,volume_se)
 ```
@@ -293,13 +298,13 @@ knitr::kable(digits = 2)
 
 | uf    | media\_reservatorios |
 |:------|---------------------:|
-| BA    |                56.26 |
+| BA    |                56.17 |
 | CE    |                56.11 |
 | PB    |                41.34 |
 | PE    |                54.47 |
 | RN    |                42.78 |
-| SE    |                83.22 |
-| Total |                55.70 |
+| SE    |                82.89 |
+| Total |                55.63 |
 
 ``` r
   
@@ -334,11 +339,12 @@ consistentes, devemos observar de perto como os reservatórios estarão.
 library(knitr)
 
 media_ano <- volume_ne %>% 
-  group_by(ano=year(data) %>% as.character) %>% 
+  group_by(ano=year(data)) %>% 
     summarise(media_reservatorios=mean(volume_util_percent,na.rm=T) %>% 
               round(2))
 
 media_ano <- media_ano %>% 
+  mutate(ano=as.character(ano)) %>% 
   bind_rows(tibble(ano='Total',
                    media_reservatorios=mean(media_ano$media_reservatorios)))
 
@@ -396,12 +402,10 @@ knitr::kable(digits = 2)
 | 2016  |                17.31 |
 | 2017  |                42.77 |
 | 2018  |                48.54 |
-| 2019  |                61.12 |
-| 2020  |                66.12 |
+| 2019  |                60.90 |
+| 2020  |                65.99 |
 | 2021  |                53.28 |
-| 5020  |                40.70 |
-| NA    |                  NaN |
-| Total |                  NaN |
+| Total |                65.14 |
 
 ``` r
 media_ano %>% 
