@@ -446,18 +446,142 @@ ggplot(aes(x=as.integer(ano),y=media_reservatorios/100,fill='red'))+
 
 ## Média por UF e ano
 
+Para uma última análise, serão analisados os gráficos por UF e ano.
+Podemos ver que para o estado da Bahia, o nível dos reservatórios
+apresenta uma variação pequena em torno dos 50%. No estado do Ceará, em
+2009 apresentou a maior porcentagem de cheia de reservatório, e em 2021
+ronda perto de 50%.
+
+No caso do estado da Paraíba, vemos que até 1992 os níveis dos
+reservatórios ficam com porcentagens altas, possivelmente por ter dados
+de poucos reservatórios, e está abaixo de 50% em 2021. No estado de
+Pernambuco, a média dos reservatórios fica próximo de 50% e no Rio
+Grande do Norte está abaixo de 50%.
+
+As médias mais altas de porcentagem de reservatórios se encontra em
+Sergipe. Estão acima de 70%, sendo o pior ano até agora em 2021.
+
 ``` r
+library(patchwork)
+
 media_uf_ano <- volume_ne %>% 
   group_by(uf,ano=year(data)) %>% 
-    summarise(media_reservatorios=mean(volume_util_percent,na.rm=T) %>% 
-              round(2))
+    summarise(media_reservatorios=round(mean(volume_util_percent,na.rm=T)/100,2))
 #> `summarise()` has grouped output by 'uf'. You can override using the `.groups` argument.
 
-ggplot(media_uf_ano, aes(factor(ano),media_reservatorios,fill=uf))+
-  geom_col(show.legend = FALSE)+
-  facet_wrap(~uf,nrow = 3,scales = 'free_x')+
-  theme_minimal()+
-  theme(panel.grid.minor = element_blank())
+theme_set(theme_minimal())
+
+plot_ba <- 
+  media_uf_ano %>% 
+  filter(uf=='BA') %>% 
+  ggplot(aes(factor(ano),media_reservatorios,group=uf,fill=uf))+
+  geom_col(show.legend = FALSE) +
+  expand_limits(y=c(0,1))+
+  scale_y_continuous(labels = scales::percent)+
+  labs(
+    title='Porcentagem dos Reservatórios da Bahia por ano',
+    x='Ano',
+    y='Porcentagem (%)')
+
+plot_ce <- 
+media_uf_ano %>% 
+  filter(uf=='CE') %>% 
+  ggplot(aes(factor(ano),media_reservatorios,group=uf,fill=uf))+
+  geom_col(show.legend = FALSE) +
+  expand_limits(y=c(0,1))+
+  scale_y_continuous(labels = scales::percent)+
+  labs(
+    title='Porcentagem dos Reservatórios do Ceará por ano',
+    x='Ano',
+    y='Porcentagem (%)')
+
+plot_pb <- 
+media_uf_ano %>% 
+  filter(uf=='PB') %>% 
+  ggplot(aes(factor(ano),media_reservatorios,group=uf,fill=uf))+
+  geom_col(show.legend = FALSE) +
+  expand_limits(y=c(0,1))+
+  scale_y_continuous(labels = scales::percent)+
+  labs(
+    title='Porcentagem dos Reservatórios de Paraíba por ano',
+    x='Ano',
+    y='Porcentagem (%)')+
+  theme(
+    axis.text.x = element_text(size = 6, angle = 45)
+  )
+
+plot_pe <- 
+media_uf_ano %>% 
+  filter(uf=='PE') %>% 
+  ggplot(aes(factor(ano),media_reservatorios,group=uf,fill=uf))+
+  geom_col(show.legend = FALSE) +
+  expand_limits(y=c(0,1))+
+  scale_y_continuous(labels = scales::percent)+
+  labs(
+    title='Porcentagem dos Reservatórios de Pernambuco por ano',
+    x='Ano',
+    y='Porcentagem (%)')
+
+plot_rn <- 
+media_uf_ano %>% 
+  filter(uf=='RN') %>% 
+  ggplot(aes(factor(ano),media_reservatorios,group=uf,fill=uf))+
+  geom_col(show.legend = FALSE) +
+  expand_limits(y=c(0,1))+
+  scale_y_continuous(labels = scales::percent)+
+  labs(
+    title='Porcentagem dos Reservatórios de Rio Grande do Norte por ano',
+    x='Ano',
+    y='Porcentagem (%)')
+
+
+plot_se <- 
+media_uf_ano %>% 
+  filter(uf=='SE') %>% 
+  ggplot(aes(factor(ano),media_reservatorios,group=uf,fill=uf))+
+  geom_col(show.legend = FALSE) +
+  expand_limits(y=c(0,1))+
+  scale_y_continuous(labels = scales::percent)+
+  labs(
+    title='Porcentagem dos Reservatórios de Sergipe por ano',
+    x='Ano',
+    y='Porcentagem (%)')
+  
+
+plot_ba/plot_ce
 ```
 
 <img src="man/figures/README-media_por_uf_ano-1.png" width="100%" />
+
+``` r
+plot_pb
+```
+
+<img src="man/figures/README-media_por_uf_ano-2.png" width="100%" />
+
+``` r
+plot_pe/plot_rn
+```
+
+<img src="man/figures/README-media_por_uf_ano-3.png" width="100%" />
+
+``` r
+plot_se
+```
+
+<img src="man/figures/README-media_por_uf_ano-4.png" width="100%" />
+
+## Conclusão
+
+Apesar de ter dados incompletos e não constantes, a iniciativa de reunir
+em um só lugar dados sobre reservatórios do Nordeste pode chamar a
+atenção de como a água está sendo armazenada. Isso pode levar a fazer um
+planejamento de preservação da água e uso com melhor eficiência desse
+recurso.
+
+Há órgãos como [DNOCS](https://www.gov.br/dnocs/pt-br) e
+[ANA](https://www.gov.br/ana/pt-br), que possuem dados mais estruturados
+e organizados, e podem auxiliar melhor a análise dos níveis dos
+reservatórios da região. Tudo isso deve estar disponível para que
+melhores políticas públicas sejam elaboradas, de modo que toda a
+população seja beneficiada.
